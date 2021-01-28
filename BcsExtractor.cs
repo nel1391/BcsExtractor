@@ -28,7 +28,7 @@ namespace BcsExtractor
                 new Option(new[] { "--overwrite" }, "Overwrite existing files in the output path."),
                 new Option(new[] { "--verbose", "-v" }, "Print more details."),
                 new Option(new[] { "--keep-newlines" }, "Keep the old newlines(\\n) in the file, otherwise they are removed before formatting."),
-                new Option<int>(new[] { "--wrap-length", "-wl" }, "Keep the old newlines(\\n) in the file, otherwise they are removed before formatting."),
+                new Option<int>(new[] { "--wrap-length", "-wl" }, "Number of characters in a row until it should wrap. Defaults to 50."),
             };
 
             extract.Handler = CommandHandler.Create<String, String?, bool, bool>(Extract);
