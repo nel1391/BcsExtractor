@@ -33,6 +33,9 @@ Be careful not to change a command or variable, the game might break if it can't
 - Q: GARBro extracts the `.bcs` files as garbled strings instead of something like `04haruna.bcs`.
 - A: Due to how the `.tac` extraction works, unless GARBro knows what the name is going to be before it extracts it, it can't determine the name. It keeps a file in `GameData/tanuki.lst` in its installation directory that is a list of all the known Tanuki Soft/Kaeru Soft `.bcs` filenames. If you extract `_project.csv`, it should tell you all the `.bcs` filenames for the scripts in that game. Add them to GARBro's `GameData/tanuki.lst` and GARBro should recognize it after. I've added an expanded `tanuki.lst` in this repo as well.
 
+- Q: All the emote sprites disappeared.
+- A: `_emote.csv` is currently broken, just place the original `_emote.bcs` in the `datascn.tac` folder instead. There is nothing to translate in `_emote.bcs` anyway.
+
 # Documentation
 
 [.bcs format](FileFormat.md)
