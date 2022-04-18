@@ -8,7 +8,7 @@ visual novels, but it is not guaranteed to work for all Rune visual novels.
 
 # Replacing the original scripts
 
-1. Extract the `.bcs` files from the archives, generally they are in `datascn.tac`, 'scenario.g2', or 'scenario.g'. I recommend using GARBro for this, but other tools will work and might be necessary depending on how old the game is.
+1. Extract the `.bcs` files from the archives, generally they are in `datascn.tac`, `scenario.g2`, or `scenario.g`. I recommend using GARBro for this, but other tools will work and might be necessary depending on how old the game is.
 2. Run `bcsextractor.exe` using extract and point it to the `.bcs` files.
 
 ```
@@ -41,7 +41,7 @@ Be careful not to change a command or variable, the game might break if it can't
 - A: `_emote.csv` is currently broken, just place the original `_emote.bcs` in the `datascn.tac` folder instead. There is nothing to translate in `_emote.bcs` anyway. The extractor should refuse to extract emote.bcs due to this.
 
 - Q: The game doesn't work after replacing the scripts.
-- A: Make sure the folder has the exact same name as the scenario archive like `datascn.tac` or 'scenario.g2'. If the game is a Rune visual novel, see the linked documentation as it's not guaranteed to work.
+- A: Make sure the folder has the exact same name as the scenario archive like `datascn.tac` or `scenario.g2`. If the game is a Rune visual novel, see the linked documentation as it's not guaranteed to work.
 
 # Documentation
 
