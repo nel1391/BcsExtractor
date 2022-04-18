@@ -182,19 +182,44 @@ namespace BcsExtractor
             String blowfishKey = "TLibDefKey";
             int bcsHeaderSize = 24;
 
+            if (baseName == "_emote" || baseName == "emote")
+            {
+                Console.WriteLine("{0} file detected. This bcs file currently can't be extracted and will be left as is", baseName);
+                finalOutput = output + "/" + baseName + ".bcs";
+
+                if (overwrite == false && File.Exists(finalOutput))
+                {
+                    Console.WriteLine("Skipping {0} because it already exists", finalOutput);
+                    return;
+                }
+
+                File.Copy(input, finalOutput, true);
+                return;
+            }
+
             if (overwrite == false && File.Exists(finalOutput)) 
             {
-                Console.WriteLine("Skipping {0} because it already exists", input);
+                Console.WriteLine("Skipping {0} because it already exists", finalOutput);
                 return;
             }
 
             byte[] resultBuffer = ReadBCSHeader(input);
-            if ((char)resultBuffer[0] != 'T' ||
-                (char)resultBuffer[1] != 'S' ||
-                (char)resultBuffer[2] != 'V') 
+            bool isTSV;
+            if ((char)resultBuffer[0] == 'T' &&
+                (char)resultBuffer[1] == 'S' &&
+                (char)resultBuffer[2] == 'V')
             {
-                if (verbose == true)
-                    Console.WriteLine("Skipping {0} because it is not a .bcs file", input);
+                isTSV = true;
+            }
+            else if ((char)resultBuffer[0] == 'B' &&
+                (char)resultBuffer[1] == 'C' &&
+                (char)resultBuffer[2] == 'S')
+            {
+                isTSV = false;
+            }
+            else
+            {
+                Console.WriteLine("Skipping {0} because it is not a .bcs file", input);
                 return;
             }
 
@@ -208,7 +233,7 @@ namespace BcsExtractor
             {
                 uint firstTableSize = objectCount * 8; // Each object is 8 bytes
                 uint secondTableSize = objectPartsCount * 8; // Index table
-                uint tnkSize = unpackedSize - (firstTableSize + secondTableSize); // TNK portion is after the two tables
+                uint tnkSize = unpackedSize - (firstTableSize + secondTableSize); // TNK/GMS portion is after the two tables
                 byte[] unpacked = new byte[unpackedSize];
                 byte[] indexTable = new byte[secondTableSize];
                 byte[] tnkTable = new byte[tnkSize];
@@ -234,10 +259,27 @@ namespace BcsExtractor
                     unpackedIndex++;
                 }
 
-                // TNK has a 12 byte header
-                byte[] tnkBody = new List<byte>(tnkTable).GetRange(12, tnkTable.Length - 12).ToArray();
-                var blowfish = new Blowfish(Encoding.ASCII.GetBytes(blowfishKey));
-                blowfish.Decipher(tnkBody, tnkBody.Length & ~7);
+                byte[] tnkBody;
+                // If TSV, then decrypt with blowfish, this is the format for new Tanuki/Kaeru Soft games.
+                // Else it's GMS, then unpack with lzss, this is the format for old Tanuki Soft/Rune games.
+                if (isTSV)
+                {
+                    // TNK has a 12 byte header
+                    tnkBody = new List<byte>(tnkTable).GetRange(12, tnkTable.Length - 12).ToArray();
+                    var blowfish = new Blowfish(Encoding.ASCII.GetBytes(blowfishKey));
+                    blowfish.Decipher(tnkBody, tnkBody.Length & ~7);
+                }
+                else
+                {
+                    // This GMS format is unknown, but it seems that the lzss unpacked size is here
+                    uint unpackedGmsSize = BitConverter.ToUInt32(tnkTable, 10);
+                    tnkBody = new byte[unpackedGmsSize];
+
+                    MemoryStream stream1 = new MemoryStream();
+                    stream1.Write(tnkTable, 0, tnkTable.Length);
+
+                    LzssUnpack(stream1, 16, tnkBody, true);
+                }
 
                 int indexCurr = 0;
                 List<byte> finalBytes = new List<byte>();
@@ -254,8 +296,7 @@ namespace BcsExtractor
                 using (StreamWriter sw = new StreamWriter(File.Open(finalOutput, FileMode.Create), Encoding.GetEncoding(932)))
                     sw.Write(finalLine);
 
-                if (verbose == true)
-                    Console.WriteLine("Finished extracting from {0}", input);
+                Console.WriteLine("Finished extracting from {0}", input);
             }
         }
 
@@ -278,9 +319,10 @@ namespace BcsExtractor
             String returnString = "";
             byte mask = 0b11;
 
-            for (int curr = 0; curr < numCols; curr++)
+            for (int curr = 0; curr < numCols && (index + indexOffset) < script.Length; curr++)
             {
                 operand = BitConverter.ToUInt32(script, index + indexOffset) & mask;
+
                 indexOffset += 4;
                 if (operand == 0x01) // Plain integer value
                 {
@@ -296,8 +338,8 @@ namespace BcsExtractor
                         work = "\"" + work + "\"";
                     returnString += work;
                 }
-                else if (returnString.Length == 0 && operand == 0x00)
-                    return returnString;
+                else if (operand == 0x00)
+                    returnString = returnString;
 
                 if (curr < numCols - 1)
                     returnString += ",";
