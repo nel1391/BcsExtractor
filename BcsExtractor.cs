@@ -341,9 +341,9 @@ namespace BcsExtractor
                 else if (operand == 0x00)
                     returnString = returnString;
 
-                if (curr < numCols - 1)
-                    returnString += ",";
                 indexOffset += 4;
+                if (curr < numCols - 1 && (index + indexOffset) < script.Length)
+                    returnString += ",";
             }
 
             return returnString;
